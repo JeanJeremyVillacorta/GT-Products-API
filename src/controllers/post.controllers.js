@@ -1,10 +1,12 @@
 import * as postService from '../services/post.services.js';
-
+import { ApiResponse } from '../utils/ApiResponse.js';
 
 export const getAllPosts = async (req, res) => {
-  try {
-    const posts = await postService.getAllPosts();
-    res.json(posts);
+    try {
+        const posts = await postService.getAllPosts();
+        return res
+            .status(200)
+            .json(new ApiResponse(200, posts, "Posts retrieved successfully"));
   } catch (error) {
     res.status(500).json({ message: 'Error retrieving posts', error: error.message });
   }
@@ -29,16 +31,16 @@ export const getPostById = async (req, res) => {
 
 export const createPost = async (req, res) => {
   try {
-    const { title, content } = req.body;
-    if (!title || !content) {
-      return res.status(400).json({ message: 'Title and content are required.' });
-    }
+    // Assuming req.body is already validated (e.g. via middleware)
+    const newPost = await postService.createPost(req.body);
 
-
-    const newPost = await postService.createPost({ title, content });
-    res.status(201).json(newPost);
+    return res
+      .status(201)
+      .json(new ApiResponse(201, newPost, "Post created successfully"));
   } catch (error) {
-    res.status(500).json({ message: 'Error creating post', error: error.message });
+    return res
+      .status(500)
+      .json(new ApiResponse(500, null, error.message || "Error creating post"));
   }
 };
 
