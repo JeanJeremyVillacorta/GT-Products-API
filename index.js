@@ -1,8 +1,11 @@
 import express from 'express';
-import postRoutes from 'c:/Users/Jeremy/Documents/DEMO-IT4C/HelloWorldAPI/src/routes/post.routes.js';
+import postRoutes from './src/routes/post.routes.js';
+import { testConnection } from './src/config/db.js';
+
 
 const app = express();
-const port = 3000;
+
+const port = process.env.PORT || 3000;
 
 app.use(express.json()); // Middleware to parse JSON bodies
 
@@ -66,4 +69,5 @@ app.delete('/posts/:id', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
+    testConnection();
 });
