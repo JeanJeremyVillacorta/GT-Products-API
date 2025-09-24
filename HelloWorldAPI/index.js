@@ -1,11 +1,13 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import morgan from 'morgan';
+
 import postRoutes from './src/routes/post.routes.js';
 import commentRoutes from './src/routes/comment.routes.js';
+import userRoutes from './src/routes/user.routes.js';
+
 import { testConnection } from './src/config/db.js';
 import { errorHandler } from './src/middlewares/errorHandler.middleware.js';
-import userRoutes from './src/routes/user.routes.js';
 
 dotenv.config();
 
@@ -17,12 +19,10 @@ app.use(express.json());
 
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
-app.use('/comments', commentRoutes);
+app.use('/api/comments', commentRoutes);
 
 app.use(errorHandler);
 
-
-// POST /posts (adds a new post to the array)
 app.post('/posts', (req, res) => {
     const { title, content } = req.body;
     if (!title || !content) {
@@ -60,7 +60,7 @@ app.put('/posts/:id', (req, res) => {
     res.json(posts[postIndex]);
 });
 
-// DELETE /posts/:id (removes a post from the array)
+
 app.delete('/posts/:id', (req, res) => {
     const postId = parseInt(req.params.id, 10);
     const postIndex = posts.findIndex(p => p.id === postId);
@@ -73,5 +73,5 @@ app.delete('/posts/:id', (req, res) => {
 
 app.listen(port, () => {
     console.log(`Server is running on http://localhost:${port}`);
-    testConnection(); // Test the database connection on startup
+    testConnection(); 
 });

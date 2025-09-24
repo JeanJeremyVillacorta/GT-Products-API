@@ -4,84 +4,73 @@ import * as postService from './post.service.js';
 import * as userService from './user.service.js';
 
 export const getAllComments = async () => {
-    const [comments] = await pool.query(`
-        SELECT 
-            c.id,
-            c.content,
-            c.postId,
-            c.authorId,
-            c.createdAt,
-            u.username AS authorUsername,
-            u.email AS authorEmail
-        FROM comments c
-        JOIN users u ON c.authorId = u.id
-        ORDER BY c.createdAt DESC
-    `);
-    return comments;
+  const [comments] = await pool.query(`
+    SELECT 
+      c.id,
+      c.content,
+      c.postId,
+      c.authorId,
+      c.createdAt,
+      u.username AS authorUsername,
+      u.email AS authorEmail
+    FROM comments c
+    JOIN users u ON c.authorId = u.id
+    ORDER BY c.createdAt DESC
+  `);
+  return comments;
 };
 
 export const getCommentsByPostId = async (postId) => {
-    const [comments] = await pool.query(`
-        SELECT 
-            c.id,
-            c.content,
-            c.postId,
-            c.authorId,
-            c.createdAt,
-            u.username AS authorUsername,
-            u.email AS authorEmail
-        FROM comments c
-        JOIN users u ON c.authorId = u.id
-        WHERE c.postId = ?
-        ORDER BY c.createdAt DESC
-    `, [postId]);
-    return comments;
+  const [comments] = await pool.query(`
+    SELECT 
+      c.id,
+      c.content,
+      c.postId,
+      c.authorId,
+      c.createdAt,
+      u.username AS authorUsername,
+      u.email AS authorEmail
+    FROM comments c
+    JOIN users u ON c.authorId = u.id
+    WHERE c.postId = ?
+    ORDER BY c.createdAt DESC
+  `, [postId]);
+
+  return comments;
 };
 
 export const createCommentForPost = async (postId, commentData) => {
-    const { content, authorId } = commentData;
+  const { content, authorId } = commentData;
 
-    try {
-        // Verify that the post exists
-        const post = await postService.getPostById(postId);
-        if (!post) {
-            throw new ApiError(404, "Post not found");
-        }
+  try {
+    const [result] = await pool.query(
+      'INSERT INTO comments (content, postId, authorId) VALUES (?, ?, ?)',
+      [content, postId, authorId]
+    );
 
-        // Verify that the author exists
-        const author = await userService.getUserById(authorId);
-        if (!author) {
-            throw new ApiError(404, "Author not found");
-        }
+    const newCommentId = result.insertId;
 
-        // Insert the comment
-        const [result] = await pool.query(
-          'INSERT INTO comments (content, postId, authorId) VALUES (?, ?, ?)',
-          [content, postId, authorId]
-        );
-
-        const newCommentId = result.insertId;
-
-        // Return the created comment with author information
-        const [newComment] = await pool.query(`
-            SELECT 
-                c.id,
-                c.content,
-                c.postId,
-                c.authorId,
-                c.createdAt,
-                u.username AS authorUsername,
-                u.email AS authorEmail
-            FROM comments c
-            JOIN users u ON c.authorId = u.id
-            WHERE c.id = ?
+    const [rows] = await pool.query(`
+      SELECT 
+        c.id,
+        c.content,
+        c.postId,
+        c.authorId,
+        c.createdAt,
+        u.username AS authorUsername,
+        u.email AS authorEmail
+      FROM comments c
+      JOIN users u ON c.authorId = u.id
+      WHERE c.id = ?
     `, [newCommentId]);
 
-        return newComment[0];
-    } catch (error) {
-        if (error instanceof ApiError) {
-            throw error;
-        }
-        throw new ApiError(500, "Failed to create comment");
+    return rows[0];
+  } catch (error) {
+    
+    if (error && error.code === 'ER_NO_REFERENCED_ROW_2') {
+      throw new ApiError(400, "Invalid postId or authorId. The specified post or user does not exist.");
     }
+    
+    throw error;
+  }
 };
