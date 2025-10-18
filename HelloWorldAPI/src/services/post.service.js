@@ -62,12 +62,12 @@ export const getPostsByAuthorId = async (authorId) => {
     return posts;
 };
 
-export const createPost = async (postData) => {
-    const { title, content, authorId } = postData; // Destructure authorId
+export const createPost = async (postData, authorId) => {
+    const { title, content } = postData; // No longer need authorId from here
     try {
         const [result] = await pool.query(
             'INSERT INTO posts (title, content, authorId) VALUES (?, ?, ?)',
-            [title, content, authorId] // Pass authorId to the query
+            [title, content, authorId] // Use the authorId from the argument
         );
         const newPost = await getPostById(result.insertId);
         return newPost;
