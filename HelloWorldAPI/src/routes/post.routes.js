@@ -10,9 +10,9 @@ const router = Router();
 router.get('/', postController.getAllPosts);
 router.post('/', authMiddleware, validatePost, postController.createPost);
 router.get('/:id', postController.getPostById);
-router.put('/:id', validatePost, postController.updatePost);
+router.put('/:id', authMiddleware, validatePost, postController.updatePost);
 router.patch('/:id', postController.partiallyUpdatePost);
-router.delete('/:id', postController.deletePost);
+router.delete('/:id', authMiddleware, postController.deletePost);
 
 // Comments (nested under posts)
 router.get('/:postId/comments', commentController.getCommentsByPostId);

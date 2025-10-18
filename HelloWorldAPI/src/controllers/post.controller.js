@@ -1,6 +1,7 @@
 import * as postService from '../services/post.service.js';
 import { validationResult } from 'express-validator';
 import { ApiResponse } from '../utils/ApiResponse.js';
+import { ApiError } from '../utils/ApiError.js';
 import asyncHandler from 'express-async-handler';
 
 export const getAllPosts = asyncHandler(async (req, res) => {
@@ -29,24 +30,12 @@ export const createPost = asyncHandler(async (req, res) => {
 });
 
 export const updatePost = asyncHandler(async (req, res) => {
-    // Check for validation errors first
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({
-            success: false,
-            statusCode: 400,
-            message: "Validation failed",
-            data: null,
-            errors: errors.array()
-        });
-    }
-
     const postId = parseInt(req.params.id, 10);
-    const post = await postService.updatePost(postId, req.body);
+    const postData = req.body;
+    const userId = req.user.id; // Get the user ID from the middleware
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, post, "Post updated successfully"));
+    const updatedPost = await postService.updatePost(postId, postData, userId);
+    res.status(200).json(new ApiResponse(200, updatedPost, "Post updated successfully"));
 });
 
 export const partiallyUpdatePost = asyncHandler(async (req, res) => {
@@ -58,11 +47,26 @@ export const partiallyUpdatePost = asyncHandler(async (req, res) => {
         .json(new ApiResponse(200, post, "Post updated successfully"));
 });
 
-export const deletePost = asyncHandler(async (req, res) => {
-    const postId = parseInt(req.params.id, 10);
-    await postService.deletePost(postId);
+export const deletePost = asyncHandler(async (req, res, next) => {
+  console.log("DELETE post called. req.user:", req.user, "params:", req.params);  
+  const postId = parseInt(req.params.id, 10);
+  const userId = req.user.id;
 
-    return res
-        .status(200)
-        .json(new ApiResponse(200, null, "Post deleted successfully"));
+  if (isNaN(postId)) {
+    throw new ApiError(400, "Invalid post ID");
+  }
+
+  try {
+    await postService.deletePost(postId, userId);
+    res.status(200).json(new ApiResponse(200, null, "Post deleted successfully"));
+  } catch (error) {
+    // If ApiError was thrown, pass it directly
+    if (error instanceof ApiError) {
+      return next(error);
+    }
+    // Otherwise log and pass generic error
+    console.error("Unexpected error in deletePost:", error);
+    return next(new ApiError(500, "Something went wrong while deleting the post"));
+  }
 });
+
