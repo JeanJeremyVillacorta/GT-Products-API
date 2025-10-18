@@ -63,18 +63,16 @@ export const getPostsByAuthorId = async (authorId) => {
 };
 
 export const createPost = async (postData) => {
-    const { title, content, authorId } = postData;
-
+    const { title, content, authorId } = postData; // Destructure authorId
     try {
         const [result] = await pool.query(
             'INSERT INTO posts (title, content, authorId) VALUES (?, ?, ?)',
-            [title, content, authorId]
+            [title, content, authorId] // Pass authorId to the query
         );
-
-        const newPostId = result.insertId;
-        return getPostById(newPostId);
-
+        const newPost = await getPostById(result.insertId);
+        return newPost;
     } catch (error) {
+        // This will catch if the authorId does not exist in the users table
         if (error.code === 'ER_NO_REFERENCED_ROW_2') {
             throw new ApiError(400, "Invalid author ID. User does not exist.");
         }

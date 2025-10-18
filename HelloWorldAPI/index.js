@@ -3,8 +3,9 @@ import dotenv from 'dotenv';
 import morgan from 'morgan';
 
 import postRoutes from './src/routes/post.routes.js';
-import commentRoutes from './src/routes/comment.routes.js';
 import userRoutes from './src/routes/user.routes.js';
+import commentRoutes from './src/routes/comment.routes.js';
+import authRoutes from './src/routes/auth.routes.js';
 
 import { testConnection } from './src/config/db.js';
 import { errorHandler } from './src/middlewares/errorHandler.middleware.js';
@@ -17,6 +18,7 @@ const port = process.env.PORT || 3000;
 app.use(morgan('dev'));
 app.use(express.json()); 
 
+app.use('/api/auth', authRoutes);
 app.use('/api/posts', postRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/comments', commentRoutes);
