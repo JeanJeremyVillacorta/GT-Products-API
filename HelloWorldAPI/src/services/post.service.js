@@ -139,8 +139,3 @@ export const deletePost = async (id, userId) => { // Add userId as an argument
     const [result] = await pool.query('DELETE FROM posts WHERE id = ?', [id]);
     return result.affectedRows;
 };
-
-
-
-
-

@@ -69,4 +69,3 @@ export const deletePost = asyncHandler(async (req, res, next) => {
     return next(new ApiError(500, "Something went wrong while deleting the post"));
   }
 });
-

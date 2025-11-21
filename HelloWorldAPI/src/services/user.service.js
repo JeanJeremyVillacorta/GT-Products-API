@@ -92,4 +92,3 @@ export const loginUser = async (loginData) => {
 
     return token;
 };
-
